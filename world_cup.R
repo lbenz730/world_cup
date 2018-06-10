@@ -16,19 +16,16 @@ x$date[127:n] <- as.Date(x$date[127:n],"%m/%d/%Y")
 x$date <- as.Date(as.numeric(x$date), origin = "1970-01-01")
 x$days_since <- as.numeric(Sys.Date() - x$date)
 
-### Get Goal Differentials
-x$goal_diff <- x$home_score - x$away_score
-
 ### Dulplicate the Data Set for H/A
-home <- select(x, home_team, away_team, tournament, neutral, goal_diff, 
+home <- select(x, home_team, away_team, tournament, neutral, home_score, 
                days_since, date) %>%
   mutate(location = "H")
-away <- select(x, away_team, home_team, tournament, neutral, goal_diff, 
+away <- select(x, away_team, home_team, tournament, neutral, away_score, 
                days_since, date) %>%
-  mutate(location = "A", goal_diff = -1 * goal_diff)
-names(home) <- c("team", "opponent", "tournament", "neutral", "goal_diff", 
+  mutate(location = "A")
+names(home) <- c("team", "opponent", "tournament", "neutral", "goals", 
                  "days_since", "date", "location")
-names(away) <- c("team", "opponent", "tournament", "neutral", "goal_diff", 
+names(away) <- c("team", "opponent", "tournament", "neutral", "goals", 
                  "days_since", "date", "location")
 x <- rbind(home, away)
 x$location[x$neutral] <- "N"
@@ -77,80 +74,112 @@ x$match_weight[x$game_type == "CFC" | x$game_type == "CC"] <- 3
 ### Model Fitting 
 ### Parameters: Team, Opponent, Match Type, Location, Days Since Previous World Cup
 y <- filter(x, date >= "2014/01/01")
-lm.futbol <- lm(goal_diff ~ team + opponent + location, 
-                data = y, weights = match_weight * exp(-days_since/max(days_since)))
-team_num <- (length(lm.futbol$coefficients) - 1)/ 2
+glm.futbol <- glm(goals ~ team + opponent + location, 
+                  family = "poisson",
+                  data = y, 
+                  weights = match_weight * exp(-days_since/max(days_since)))
+team_num <- (length(glm.futbol$coefficients) - 1)/ 2
 rankings <- data.frame("team" = sort(unique(y$team)),
-                       "yusag_coeff" = rep(NA, team_num))
-scale_factor <- mean(lm.futbol$coefficients[2:team_num])
-rankings$yusag_coeff <- c(0, lm.futbol$coefficients[2:team_num]) - scale_factor
-rankings <- rankings[order(rankings$yusag_coeff, decreasing = T),]
+                       "offense" = rep(NA, team_num),
+                       "defense" = rep(NA, team_num))
+off_scale_factor <- mean(glm.futbol$coefficients[2:team_num])
+def_scale_factor <- mean(glm.futbol$coefficients[(team_num + 1):(2*team_num - 1)])
+rankings$offense <- c(0, glm.futbol$coefficients[2:team_num]) - off_scale_factor
+rankings$defense <- c(0, glm.futbol$coefficients[(team_num + 1):(2*team_num - 1)]) - def_scale_factor
+rankings$net_rating <- rankings$offense - rankings$defense
+
+
+rankings <- rankings[order(rankings$net_rating, decreasing = T),]
 rankings$rank <- 1:nrow(rankings)
 write.csv(rankings, "rankings.csv", row.names = F)
 
-### Win Prob Model
-y$pred_gd <- lm.futbol$fitted.values
-y$outcome <- "tie"
-y$outcome[y$goal_diff > 0] <- "win"
-y$outcome[y$goal_diff < 0] <- "loss"
-wp_model <- multinom(outcome ~ pred_gd, data = y)
+############ Make Predictions ############
+fixtures <- read.csv("fixtures.csv", as.is = T)
+fixtures <- mutate(fixtures, "win" = NA, "tie" = NA, "loss" = NA)
+index <- !is.na(fixtures$goal_diff)
+fixtures[index & fixtures$goal_diff > 0, c("win", "tie", "loss")] <- c(1,0,0)
+fixtures[index & fixtures$goal_diff == 0, c("win", "tie", "loss")] <- c(0,1,0)
+fixtures[index & fixtures$goal_diff < 0, c("win", "tie", "loss")] <- c(0,0,1)
 
+### Inverts Perspective of Data Frame from Team to Opponent
+invert <- function(data) {
+  data <- mutate(data, tmp = team, team = opponent, opponent = tmp)
+  data$tmp[data$location == "H"] <- "A"
+  data$tmp[data$location == "A"] <- "H"
+  data$tmp[data$location == "N"] <- "N"
+  data$location <- data$tmp
+  return(select(data,-tmp))
+}
 
+### Obtain W, L, T probabilities
+match_probs <- function(lambda_1, lambda_2) {
+  max_goals <- 10
+  score_matrix <- dpois(0:max_goals, lambda_1) %o% dpois(0:max_goals, lambda_2)
+  tie_prob <- sum(diag(score_matrix))
+  win_prob <- sum(score_matrix[lower.tri(score_matrix)])
+  loss_prob <- sum(score_matrix[upper.tri(score_matrix)])
+  return(c(win_prob, tie_prob, loss_prob))
+}
+
+fixtures$team_score[is.na(fixtures$team_score)]<- 
+  predict(glm.futbol, newdata = fixtures[is.na(fixtures$team_score),], type = "response")
+fixtures$opponent_score[is.na(fixtures$opponent_score)]<- 
+  predict(glm.futbol, newdata = invert(fixtures[is.na(fixtures$opponent_score),]), type = "response")
+fixtures$goal_diff <- fixtures$team_score - fixtures$opponent_score
+
+for(i in 1:nrow(fixtures)) {
+  if(is.na(fixtures$win[i])) {
+    fixtures[i, c("win", "tie", "loss")] <- match_probs(lambda_1 = fixtures$team_score[i],
+                                                        lambda_2 = fixtures$opponent_score[i])
+  }
+}
 
 ######## Monte Carlo Simulations
-fixtures <- read.csv("fixtures.csv", as.is = T)
-fixtures$pred_gd <- predict(lm.futbol, newdata = fixtures)
-fixtures <- cbind(fixtures, predict(wp_model, newdata = fixtures, "probs"))
-index <- !is.na(fixtures$goal_diff)
-fixtures[index & fixtures$goal_diff > 0, c("loss", "tie", "win")] <- c(0,0,1)
-fixtures[index & fixtures$goal_diff == 0, c("loss", "tie", "win")] <- c(0,1,0)
-fixtures[index & fixtures$goal_diff < 0, c("loss", "tie", "win")] <- c(1,0,0)
-
 sim_group <- function(group_name) {
-  games <- filter(fixtures, group == group_name) 
-  rand <- runif(6)
+  games <- filter(fixtures, group == group_name) %>% mutate(
+    "team_goals" = NA, "opp_goals" = NA, "team_gd" = NA, "opp_gd" = NA,
+    "team_points" = 0, "opp_points" = 0)
   for(i in 1:nrow(games)) {
-    if(rand[i] <= games$win[i]) {
-      games$team_pts[i] <- 3
-      games$opp_pts[i] <- 0
+    lambda_1 <- games$team_score[i]
+    lambda_2 <- games$opponent_score[i]
+    games$team_goals[i] <- rpois(1, lambda_1)
+    games$opp_goals[i] <- rpois(1, lambda_2)
+    games$team_gd[i] <- games$team_goals[i] - games$opp_goals[i]
+    games$opp_gd[i] <- games$opp_goals[i] - games$team_goals[i]
+    if(games$team_gd[i] > 0) {
+      games$team_points[i] <- 3
     }
-    else if(rand[i] <= games$win[i] + games$tie[i]) {
-      games$team_pts[i] <- 1
-      games$opp_pts[i] <- 1
+    if(games$opp_gd[i] > 0) {
+      games$opp_points[i] <- 3
     }
-    else{
-      games$team_pts[i] <- 0
-      games$opp_pts[i] <- 3 
+    if(games$team_gd[i] == 0) {
+      games$team_points[i] <- 1
+      games$opp_points[i] <- 1
     }
   }
+  
   ladder <- data.frame("country" = unique(c(games$team, games$opponent)),
                        "pts" = rep(NA, 4),
+                       "goals_forced" = rep(NA, 4),
+                       "goals_against" = rep(NA, 4),
+                       "goal_diff" = rep(NA, 4),
                        stringsAsFactors = F)
   for(i in 1:4) {
-    ladder$pts[i] <- sum(games$team_pts[games$team == ladder$country[i]]) + 
-      sum(games$opp_pts[games$opponent == ladder$country[i]])
+    ladder$pts[i] <- sum(games$team_points[games$team == ladder$country[i]]) + 
+      sum(games$opp_points[games$opponent == ladder$country[i]])
+    ladder$goal_diff[i] <- sum(games$team_gd[games$team == ladder$country[i]]) + 
+      sum(games$opp_gd[games$opponent == ladder$country[i]])
+    ladder$goals_forced[i] <- sum(games$team_goals[games$team == ladder$country[i]]) + 
+      sum(games$opp_goals[games$opponent == ladder$country[i]])
+    ladder$goals_against[i] <- sum(games$opp_goals[games$team == ladder$country[i]]) + 
+      sum(games$team_goals[games$opponent == ladder$country[i]])
   }
-  ladder <- ladder[order(ladder$pts, decreasing = T),]
-  
-  ### Break Ties
-  if(ladder$pts[1] == ladder$pts[2]) {
-    ladder <- ladder[c(sample(1:2),3,4),]
-  }
-  else if(ladder$pts[2] == ladder$pts[3]) {
-    ladder <- ladder[c(1,sample(2:3),4),]
-  }
-  else if(ladder$pts[1] == ladder$pts[3]) {
-    ladder <- ladder[c(sample(1:3),4),]
-  }
-  else if(ladder$pts[2] == ladder$pts[4]) {
-    ladder <- ladder[c(1,sample(2:4)),]
-  }
-  else if(ladder$pts[1] == ladder$pts[4]) {
-    ladder <- ladder[c(sample(1:4)),]
-  }
+  ladder <- ladder[order(ladder$pts, ladder$goal_diff, 
+                         ladder$goals_forced, -1 * ladder$goals_against, decreasing = T),]
   return(ladder)
 }
 
+### Real Sims Start Here
 wc_sims <- data.frame("country" = unique(c(fixtures$team, fixtures$opponent)),
                       "group" = c(rep(c("A", "B", "C", "D", "E", "F", "G", "H"), rep(3, 8)),
                                   c("A", "B", "C", "D", "E", "F", "G", "H")),
@@ -176,7 +205,7 @@ for(k in 1:nsims) {
   ### Group Stage
   for(i in 1:8) {
     sim_ladder <- sim_group(groups[i])
-    index <- wc_sims$country %in% sim_ladder$country
+    index <- apply(as.data.frame(sim_ladder$country), 1, grep, wc_sims$country)
     wc_sims$expected_pts[index] <- wc_sims$expected_pts[index] + sim_ladder$pts/nsims
     index_1 <- wc_sims$country == sim_ladder$country[1]
     index_2 <- wc_sims$country == sim_ladder$country[2]
@@ -195,6 +224,8 @@ for(k in 1:nsims) {
   while(teams_left > 1) {
     knockout <- data.frame("team" = winners[1:(teams_left/2)],
                            "opponent" = winners[(1 + teams_left/2):teams_left],
+                           "team_goals" = rep(NA, teams_left/2),
+                           "opp_goals" = rep(NA, teams_left/2),
                            "winner" = rep(NA, teams_left/2),
                            "location" = rep("N", teams_left/2),
                            stringsAsFactors = F)
@@ -202,34 +233,31 @@ for(k in 1:nsims) {
     knockout$location[knockout$team == "Russia"] <- "H"
     knockout$location[knockout$opponent == "Russia"] <- "A"
     
-    knockout$pred_gd <- predict(lm.futbol, newdata = knockout)
-    if(ko_round < 4) {
-      knockout <- cbind(knockout, predict(wp_model, newdata = knockout, "probs"))
-    }
-    else {
-      preds <-  predict(wp_model, newdata = knockout, "probs")
-      knockout$loss <- preds[1]
-      knockout$tie <- preds[2]
-      knockout$win <- preds[3]
-    }
+    knockout$team_goals <- 
+      predict(glm.futbol, newdata = knockout, type = "response")
+    knockout$opp_goals <- 
+      predict(glm.futbol, newdata = invert(knockout), type = "response")
     
-    rand <- runif(nrow(knockout))
+
+    winners <- rep(NA, teams_left/2)
     for(i in 1:nrow(knockout)) {
-      if(rand[i] <= knockout$win[i]) {
+      team_goals <- rpois(1, knockout$team_goals[i])
+      opp_goals <- rpois(1, knockout$opp_goals[i])
+      if(team_goals > opp_goals) {
         knockout$winner[i] <- knockout$team[i]
       }
-      else if(rand[i] <= knockout$win[i] + knockout$tie[i]) {
-        knockout$winner[i] <- sample(c(knockout$team[i], knockout$opponent[i]), 1)
-      }
-      else{
+      else if(team_goals < opp_goals) {
         knockout$winner[i] <- knockout$opponent[i]
+      }
+      else { 
+        ## Penalty Shoutout 50-50
+        knockout$winner[i] <- sample(c(knockout$team[i], knockout$opponent[i]), 1)
       }
     }
     
     if(teams_left > 2) {
       winners <- knockout$winner[c(seq(1, teams_left/2, 2), seq(2, teams_left/2, 2))]
-    }
-    else{
+    }else{
       winners <- knockout$winner
     }
     index <- wc_sims$country %in% knockout$winner
