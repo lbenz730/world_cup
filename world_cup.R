@@ -5,15 +5,11 @@
 
 ### Load Packages
 library(dplyr)
-library(ggplot2)
-library(nnet)
 
 ### Data Cleaning
 x <- read.csv("international_soccer_game_data.csv", as.is = T)
 n <- nrow(x)
-x$date[1:126] <- as.Date(x$date[1:126],"%Y-%m-%d")
-x$date[127:n] <- as.Date(x$date[127:n],"%m/%d/%Y")
-x$date <- as.Date(as.numeric(x$date), origin = "1970-01-01")
+x$date <- as.Date(x$date,"%Y-%m-%d")
 x$days_since <- as.numeric(Sys.Date() - x$date)
 
 ### Dulplicate the Data Set for H/A
@@ -65,19 +61,22 @@ x$game_type[x$tournament == "Oceania Nations Cup qualification"] <- "CCQ"
 x$game_type[x$tournament == "UAFA Cup qualification"] <- "CCQ"
 x$game_type[x$tournament == "UEFA Euro qualification"] <- "CCQ"
 
-### Match Importance Parameters (the same as those used in the FIFA rankings formula)
+### Match Importance Parameters (based on those used in the FIFA rankings formula)
 x$match_weight <- 1
-x$match_weight[x$game_type == "WC"] <- 4
-x$match_weight[x$game_type == "WCQ" | x$game_type == "CCQ"] <- 2.5
-x$match_weight[x$game_type == "CFC" | x$game_type == "CC"] <- 3
+x$match_weight[x$game_type == "WC"] <- 8
+x$match_weight[x$game_type == "WCQ" | x$game_type == "CCQ"] <- 3
+x$match_weight[x$game_type == "CFC" | x$game_type == "CC"] <- 5
 
 ### Model Fitting 
 ### Parameters: Team, Opponent, Match Type, Location, Days Since Previous World Cup
 y <- filter(x, date >= "2014/01/01")
+y$match_weight <- 
+  mutate(y, "match_weight" = match_weight * exp(-days_since/max(days_since))) %>% 
+  pull(match_weight)
 glm.futbol <- glm(goals ~ team + opponent + location, 
                   family = "poisson",
                   data = y, 
-                  weights = match_weight * exp(-days_since/max(days_since)))
+                  weights = match_weight)
 team_num <- (length(glm.futbol$coefficients) - 1)/ 2
 rankings <- data.frame("team" = sort(unique(y$team)),
                        "offense" = rep(NA, team_num),
@@ -113,7 +112,7 @@ invert <- function(data) {
 
 ### Obtain W, L, T probabilities
 match_probs <- function(lambda_1, lambda_2) {
-  max_goals <- 10
+  max_goals <- 3
   score_matrix <- dpois(0:max_goals, lambda_1) %o% dpois(0:max_goals, lambda_2)
   tie_prob <- sum(diag(score_matrix))
   win_prob <- sum(score_matrix[lower.tri(score_matrix)])
@@ -269,5 +268,5 @@ for(k in 1:nsims) {
   }
 }
 wc_sims$expected_pts <- round(wc_sims$expected_pts, 2)
-wc_sims[, 4:10] <- round(wc_sims[, 4:10], 3)
+wc_sims[, 4:10] <- round(wc_sims[, 4:10], 4)
 write.csv(wc_sims, "wc_sims.csv", row.names = F)
