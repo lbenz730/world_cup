@@ -5,6 +5,7 @@
 
 ### Load Packages
 library(dplyr)
+library(ggplot2)
 
 ### Data Cleaning
 x <- read.csv("international_soccer_game_data.csv", as.is = T)
@@ -112,7 +113,7 @@ invert <- function(data) {
 
 ### Obtain W, L, T probabilities
 match_probs <- function(lambda_1, lambda_2) {
-  max_goals <- 3
+  max_goals <- 10
   score_matrix <- dpois(0:max_goals, lambda_1) %o% dpois(0:max_goals, lambda_2)
   tie_prob <- sum(diag(score_matrix))
   win_prob <- sum(score_matrix[lower.tri(score_matrix)])
@@ -132,6 +133,26 @@ for(i in 1:nrow(fixtures)) {
                                                         lambda_2 = fixtures$opponent_score[i])
   }
 }
+
+### Bind Completed Fixtures with existing Data Set
+y <- rbind(y, fixtures %>% mutate("tournament" = "World Cup", "neutral" = location == "N", 
+                    "goals" = team_score,
+                    "days_since" = as.numeric(Sys.Date() - as.Date(date, "%m/%d/%y")), 
+                    "game_type" = "WC",
+                    "match_weight"= 8) %>% 
+  select(team, opponent, tournament, neutral, goals,days_since, date, location, 
+         game_type, match_weight) %>%
+  filter(days_since >= 0))
+
+y <- rbind(y, invert(fixtures) %>% mutate("tournament" = "World Cup", "neutral" = location == "N", 
+                    "goals" = team_score,
+                    "days_since" = as.numeric(Sys.Date() - as.Date(date, "%m/%d/%y")), 
+                    "game_type" = "WC",
+                    "match_weight"= 8) %>% 
+  select(team, opponent, tournament, neutral, goals,days_since, date, location, 
+         game_type, match_weight) %>%
+  filter(days_since >= 0))
+
 
 ######## Monte Carlo Simulations
 sim_group <- function(group_name) {
@@ -270,3 +291,43 @@ for(k in 1:nsims) {
 wc_sims$expected_pts <- round(wc_sims$expected_pts, 2)
 wc_sims[, 4:10] <- round(wc_sims[, 4:10], 4)
 write.csv(wc_sims, "wc_sims.csv", row.names = F)
+
+
+goal_plot <- function(team1, team2, location, col1, col2) {
+ lambda1 <- predict(glm.futbol, newdata = data.frame("team" = team1,
+                                          "opponent" = team2,
+                                          "location" = location,
+                                          stringsAsFactors = F), 
+                   type = "response")
+ lambda2 <- predict(glm.futbol, newdata = invert(data.frame("team" = team1,
+                                          "opponent" = team2,
+                                          "location" = location,
+                                          stringsAsFactors = F)), 
+                   type = "response")
+ max_goals <- 10
+ score_matrix <- dpois(0:max_goals, lambda1) %o% dpois(0:max_goals, lambda2)
+ tie_prob <- sum(diag(score_matrix))
+ win_prob <- sum(score_matrix[lower.tri(score_matrix)])
+ loss_prob <- sum(score_matrix[upper.tri(score_matrix)])
+ 
+ 
+ z <- data.frame("Team" = rep(c(team1, team2), rep(4,2)),
+                 "Goals" = rep(c("0", "1", "2", "3+"), 2),
+                 "Probability" = c(dpois(0:2, lambda1), sum(dpois(3:10, lambda1)),
+                             dpois(0:2, lambda2), sum(dpois(3:10, lambda2))))
+ 
+ vec <- c(team1, team2)
+ vec <- sort(vec)
+ if(vec[1] == team2) {
+   tmp <- col1
+   col1 <- col2
+   col2 <- tmp
+ }
+ ggplot(z, aes(x = Goals, y = Probability, fill = Team)) + 
+   geom_bar(stat = "identity", position='dodge', colour  = "black") + 
+   labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
+   scale_fill_manual(values=c(col1, col2)) +
+   annotate("text", x = 3.4, y = 0.4, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
+   annotate("text", x = 3.4, y = 0.39, label = paste(team2, "Expected Goals:", round(lambda2, 2))) 
+ 
+}
