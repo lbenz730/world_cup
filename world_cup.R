@@ -293,6 +293,8 @@ wc_sims[, 4:10] <- round(wc_sims[, 4:10], 4)
 write.csv(wc_sims, "wc_sims.csv", row.names = F)
 
 
+
+### Goal Plot Function
 goal_plot <- function(team1, team2, location, col1, col2) {
  lambda1 <- predict(glm.futbol, newdata = data.frame("team" = team1,
                                           "opponent" = team2,
@@ -328,6 +330,9 @@ goal_plot <- function(team1, team2, location, col1, col2) {
    labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
    scale_fill_manual(values=c(col1, col2)) +
    annotate("text", x = 3.4, y = 0.4, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
-   annotate("text", x = 3.4, y = 0.39, label = paste(team2, "Expected Goals:", round(lambda2, 2))) 
+   annotate("text", x = 3.4, y = 0.39, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
+   annotate("text", x = 3.4, y = 0.38, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
+   annotate("text", x = 3.4, y = 0.37, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
+   annotate("text", x = 3.4, y = 0.36, label = paste("Tie Probability", round(tie_prob, 2)))
  
 }
