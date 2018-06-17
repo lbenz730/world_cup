@@ -1,49 +1,49 @@
-"team","opponent","location","group","team_score","opponent_score","goal_diff","date"
-"Uruguay","Egypt","N","A",NA,NA,NA,"6/15/18"
-"Uruguay","Russia","A","A",NA,NA,NA,"6/25/18"
-"Uruguay","Saudi Arabia","N","A",NA,NA,NA,"6/20/18"
-"Egypt","Russia","A","A",NA,NA,NA,"6/19/18"
-"Egypt","Saudi Arabia","N","A",NA,NA,NA,"6/25/18"
-"Russia","Saudi Arabia","H","A",NA,NA,NA,"6/14/18"
-"Spain","Portugal","N","B",NA,NA,NA,"6/15/18"
-"Spain","Iran","N","B",NA,NA,NA,"6/20/18"
-"Spain","Morocco","N","B",NA,NA,NA,"6/25/18"
-"Portugal","Iran","N","B",NA,NA,NA,"6/25/18"
-"Portugal","Morocco","N","B",NA,NA,NA,"6/20/18"
-"Iran","Morocco","N","B",NA,NA,NA,"6/15/18"
-"France","Peru","N","C",NA,NA,NA,"6/21/18"
-"France","Australia","N","C",NA,NA,NA,"6/16/18"
-"France","Denmark","N","C",NA,NA,NA,"6/26/18"
-"Peru","Australia","N","C",NA,NA,NA,"6/26/18"
-"Peru","Denmark","N","C",NA,NA,NA,"6/16/18"
-"Australia","Denmark","N","C",NA,NA,NA,"6/21/18"
-"Argentina","Croatia","N","D",NA,NA,NA,"6/21/18"
-"Argentina","Iceland","N","D",NA,NA,NA,"6/16/18"
-"Argentina","Nigeria","N","D",NA,NA,NA,"6/26/18"
-"Croatia","Iceland","N","D",NA,NA,NA,"6/26/18"
-"Croatia","Nigeria","N","D",NA,NA,NA,"6/16/18"
-"Iceland","Nigeria","N","D",NA,NA,NA,"6/22/18"
-"Brazil","Costa Rica","N","E",NA,NA,NA,"6/22/18"
-"Brazil","Switzerland","N","E",NA,NA,NA,"6/17/18"
-"Brazil","Serbia","N","E",NA,NA,NA,"6/27/18"
-"Costa Rica","Switzerland","N","E",NA,NA,NA,"6/27/18"
-"Costa Rica","Serbia","N","E",NA,NA,NA,"6/17/18"
-"Switzerland","Serbia","N","E",NA,NA,NA,"6/22/18"
-"Germany","Korea Republic","N","F",NA,NA,NA,"6/27/18"
-"Germany","Mexico","N","F",NA,NA,NA,"6/17/18"
-"Germany","Sweden","N","F",NA,NA,NA,"6/23/18"
-"Korea Republic","Mexico","N","F",NA,NA,NA,"6/23/18"
-"Korea Republic","Sweden","N","F",NA,NA,NA,"6/18/18"
-"Mexico","Sweden","N","F",NA,NA,NA,"6/27/18"
-"Belgium","England","N","G",NA,NA,NA,"6/28/18"
-"Belgium","Panama","N","G",NA,NA,NA,"6/18/18"
-"Belgium","Tunisia","N","G",NA,NA,NA,"6/23/18"
-"England","Panama","N","G",NA,NA,NA,"6/24/18"
-"England","Tunisia","N","G",NA,NA,NA,"6/18/18"
-"Panama","Tunisia","N","G",NA,NA,NA,"6/28/18"
-"Colombia","Japan","N","H",NA,NA,NA,"6/19/18"
-"Colombia","Poland","N","H",NA,NA,NA,"6/24/18"
-"Colombia","Senegal","N","H",NA,NA,NA,"6/28/18"
-"Poland","Japan","N","H",NA,NA,NA,"6/28/18"
-"Poland","Senegal","N","H",NA,NA,NA,"6/19/18"
-"Japan","Senegal","N","H",NA,NA,NA,"6/24/18"
+team,opponent,location,group,team_score,opponent_score,goal_diff,date
+Uruguay,Egypt,N,A,1,0,1,6/15/18
+Uruguay,Russia,A,A,NA,NA,NA,6/25/18
+Uruguay,Saudi Arabia,N,A,NA,NA,NA,6/20/18
+Egypt,Russia,A,A,NA,NA,NA,6/19/18
+Egypt,Saudi Arabia,N,A,NA,NA,NA,6/25/18
+Russia,Saudi Arabia,H,A,5,0,5,6/14/18
+Spain,Portugal,N,B,3,3,0,6/15/18
+Spain,Iran,N,B,NA,NA,NA,6/20/18
+Spain,Morocco,N,B,NA,NA,NA,6/25/18
+Portugal,Iran,N,B,NA,NA,NA,6/25/18
+Portugal,Morocco,N,B,NA,NA,NA,6/20/18
+Iran,Morocco,N,B,1,0,1,6/15/18
+France,Peru,N,C,NA,NA,NA,6/21/18
+France,Australia,N,C,NA,NA,NA,6/16/18
+France,Denmark,N,C,NA,NA,NA,6/26/18
+Peru,Australia,N,C,NA,NA,NA,6/26/18
+Peru,Denmark,N,C,NA,NA,NA,6/16/18
+Australia,Denmark,N,C,NA,NA,NA,6/21/18
+Argentina,Croatia,N,D,NA,NA,NA,6/21/18
+Argentina,Iceland,N,D,NA,NA,NA,6/16/18
+Argentina,Nigeria,N,D,NA,NA,NA,6/26/18
+Croatia,Iceland,N,D,NA,NA,NA,6/26/18
+Croatia,Nigeria,N,D,NA,NA,NA,6/16/18
+Iceland,Nigeria,N,D,NA,NA,NA,6/22/18
+Brazil,Costa Rica,N,E,NA,NA,NA,6/22/18
+Brazil,Switzerland,N,E,NA,NA,NA,6/17/18
+Brazil,Serbia,N,E,NA,NA,NA,6/27/18
+Costa Rica,Switzerland,N,E,NA,NA,NA,6/27/18
+Costa Rica,Serbia,N,E,NA,NA,NA,6/17/18
+Switzerland,Serbia,N,E,NA,NA,NA,6/22/18
+Germany,Korea Republic,N,F,NA,NA,NA,6/27/18
+Germany,Mexico,N,F,NA,NA,NA,6/17/18
+Germany,Sweden,N,F,NA,NA,NA,6/23/18
+Korea Republic,Mexico,N,F,NA,NA,NA,6/23/18
+Korea Republic,Sweden,N,F,NA,NA,NA,6/18/18
+Mexico,Sweden,N,F,NA,NA,NA,6/27/18
+Belgium,England,N,G,NA,NA,NA,6/28/18
+Belgium,Panama,N,G,NA,NA,NA,6/18/18
+Belgium,Tunisia,N,G,NA,NA,NA,6/23/18
+England,Panama,N,G,NA,NA,NA,6/24/18
+England,Tunisia,N,G,NA,NA,NA,6/18/18
+Panama,Tunisia,N,G,NA,NA,NA,6/28/18
+Colombia,Japan,N,H,NA,NA,NA,6/19/18
+Colombia,Poland,N,H,NA,NA,NA,6/24/18
+Colombia,Senegal,N,H,NA,NA,NA,6/28/18
+Poland,Japan,N,H,NA,NA,NA,6/28/18
+Poland,Senegal,N,H,NA,NA,NA,6/19/18
+Japan,Senegal,N,H,NA,NA,NA,6/24/18

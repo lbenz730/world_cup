@@ -68,9 +68,57 @@ x$match_weight[x$game_type == "WC"] <- 8
 x$match_weight[x$game_type == "WCQ" | x$game_type == "CCQ"] <- 3
 x$match_weight[x$game_type == "CFC" | x$game_type == "CC"] <- 5
 
+### Inverts Perspective of Data Frame from Team to Opponent
+invert <- function(data, score = F) {
+  data <- mutate(data, tmp = team, team = opponent, opponent = tmp)
+  data$tmp[data$location == "H"] <- "A"
+  data$tmp[data$location == "A"] <- "H"
+  data$tmp[data$location == "N"] <- "N"
+  data$location <- data$tmp
+  if(score) {
+    data$tmp <- data$team_score
+    data$team_score <- data$opponent_score
+    data$opponent_score <- data$tmp
+  }
+  return(select(data,-tmp))
+}
+
+### Obtain W, L, T probabilities
+match_probs <- function(lambda_1, lambda_2) {
+  max_goals <- 10
+  score_matrix <- dpois(0:max_goals, lambda_1) %o% dpois(0:max_goals, lambda_2)
+  tie_prob <- sum(diag(score_matrix))
+  win_prob <- sum(score_matrix[lower.tri(score_matrix)])
+  loss_prob <- sum(score_matrix[upper.tri(score_matrix)])
+  return(c(win_prob, tie_prob, loss_prob))
+}
+
 ### Model Fitting 
 ### Parameters: Team, Opponent, Match Type, Location, Days Since Previous World Cup
 y <- filter(x, date >= "2014/01/01")
+fixtures <- read.csv("fixtures.csv", as.is = T)
+
+### Bind Completed Fixtures with existing Data Set
+y <- rbind(y, fixtures %>% mutate("tournament" = "World Cup", "neutral" = location == "N", 
+                                  "goals" = team_score,
+                                  "date" = as.Date(date, "%m/%d/%y"),
+                                  "days_since" = as.numeric(Sys.Date() - date), 
+                                  "game_type" = "WC",
+                                  "match_weight"= 8) %>% 
+             select(team, opponent, tournament, neutral, goals,days_since, date, location, 
+                    game_type, match_weight) %>%
+             filter(days_since >= 0))
+
+y <- rbind(y, invert(fixtures, T) %>% mutate("tournament" = "World Cup", "neutral" = location == "N", 
+                                          "goals" = team_score,
+                                          "date" = as.Date(date, "%m/%d/%y"),
+                                          "days_since" = as.numeric(Sys.Date() - date), 
+                                          "game_type" = "WC",
+                                          "match_weight"= 8) %>% 
+             select(team, opponent, tournament, neutral, goals,days_since, date, location, 
+                    game_type, match_weight) %>%
+             filter(days_since >= 0))
+
 y$match_weight <- 
   mutate(y, "match_weight" = match_weight * exp(-days_since/max(days_since))) %>% 
   pull(match_weight)
@@ -94,32 +142,11 @@ rankings$rank <- 1:nrow(rankings)
 write.csv(rankings, "rankings.csv", row.names = F)
 
 ############ Make Predictions ############
-fixtures <- read.csv("fixtures.csv", as.is = T)
 fixtures <- mutate(fixtures, "win" = NA, "tie" = NA, "loss" = NA)
 index <- !is.na(fixtures$goal_diff)
-fixtures[index & fixtures$goal_diff > 0, c("win", "tie", "loss")] <- c(1,0,0)
-fixtures[index & fixtures$goal_diff == 0, c("win", "tie", "loss")] <- c(0,1,0)
-fixtures[index & fixtures$goal_diff < 0, c("win", "tie", "loss")] <- c(0,0,1)
-
-### Inverts Perspective of Data Frame from Team to Opponent
-invert <- function(data) {
-  data <- mutate(data, tmp = team, team = opponent, opponent = tmp)
-  data$tmp[data$location == "H"] <- "A"
-  data$tmp[data$location == "A"] <- "H"
-  data$tmp[data$location == "N"] <- "N"
-  data$location <- data$tmp
-  return(select(data,-tmp))
-}
-
-### Obtain W, L, T probabilities
-match_probs <- function(lambda_1, lambda_2) {
-  max_goals <- 10
-  score_matrix <- dpois(0:max_goals, lambda_1) %o% dpois(0:max_goals, lambda_2)
-  tie_prob <- sum(diag(score_matrix))
-  win_prob <- sum(score_matrix[lower.tri(score_matrix)])
-  loss_prob <- sum(score_matrix[upper.tri(score_matrix)])
-  return(c(win_prob, tie_prob, loss_prob))
-}
+fixtures[index & fixtures$goal_diff > 0, c("win", "tie", "loss")] <- rep(c(1,0,0), rep(3, sum(index & fixtures$goal_diff > 0)))
+fixtures[index & fixtures$goal_diff == 0, c("win", "tie", "loss")] <-rep(c(0,1,0), rep(3, sum(index & fixtures$goal_diff == 0)))
+fixtures[index & fixtures$goal_diff < 0, c("win", "tie", "loss")] <- rep(c(0,0,1), rep(3, sum(index & fixtures$goal_diff < 0)))
 
 fixtures$team_score[is.na(fixtures$team_score)]<- 
   predict(glm.futbol, newdata = fixtures[is.na(fixtures$team_score),], type = "response")
@@ -134,24 +161,7 @@ for(i in 1:nrow(fixtures)) {
   }
 }
 
-### Bind Completed Fixtures with existing Data Set
-y <- rbind(y, fixtures %>% mutate("tournament" = "World Cup", "neutral" = location == "N", 
-                    "goals" = team_score,
-                    "days_since" = as.numeric(Sys.Date() - as.Date(date, "%m/%d/%y")), 
-                    "game_type" = "WC",
-                    "match_weight"= 8) %>% 
-  select(team, opponent, tournament, neutral, goals,days_since, date, location, 
-         game_type, match_weight) %>%
-  filter(days_since >= 0))
 
-y <- rbind(y, invert(fixtures) %>% mutate("tournament" = "World Cup", "neutral" = location == "N", 
-                    "goals" = team_score,
-                    "days_since" = as.numeric(Sys.Date() - as.Date(date, "%m/%d/%y")), 
-                    "game_type" = "WC",
-                    "match_weight"= 8) %>% 
-  select(team, opponent, tournament, neutral, goals,days_since, date, location, 
-         game_type, match_weight) %>%
-  filter(days_since >= 0))
 
 
 ######## Monte Carlo Simulations
@@ -336,3 +346,8 @@ goal_plot <- function(team1, team2, location, col1, col2) {
    annotate("text", x = 3.4, y = 0.36, label = paste("Tie Probability", round(tie_prob, 2)))
  
 }
+
+goal_plot("France", "Australia", "N", "dodgerblue4", "yellow1")
+goal_plot("Argentina", "Iceland", "N", "lightskyblue", "dodgerblue")
+goal_plot("Denmark", "Peru", "N", "firebrick4", "white")
+goal_plot("Croatia", "Nigeria", "N", "red3", "chartreuse3")
