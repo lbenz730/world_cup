@@ -104,7 +104,7 @@ y <- rbind(y, fixtures %>% mutate("tournament" = "World Cup", "neutral" = locati
                                   "date" = as.Date(date, "%m/%d/%y"),
                                   "days_since" = as.numeric(Sys.Date() - date), 
                                   "game_type" = "WC",
-                                  "match_weight"= 8) %>% 
+                                  "match_weight"= 4) %>% 
              select(team, opponent, tournament, neutral, goals,days_since, date, location, 
                     game_type, match_weight) %>%
              filter(days_since >= 0))
@@ -114,7 +114,7 @@ y <- rbind(y, invert(fixtures, T) %>% mutate("tournament" = "World Cup", "neutra
                                           "date" = as.Date(date, "%m/%d/%y"),
                                           "days_since" = as.numeric(Sys.Date() - date), 
                                           "game_type" = "WC",
-                                          "match_weight"= 8) %>% 
+                                          "match_weight"= 4) %>% 
              select(team, opponent, tournament, neutral, goals,days_since, date, location, 
                     game_type, match_weight) %>%
              filter(days_since >= 0))
@@ -144,9 +144,9 @@ write.csv(rankings, "rankings.csv", row.names = F)
 ############ Make Predictions ############
 fixtures <- mutate(fixtures, "win" = NA, "tie" = NA, "loss" = NA)
 index <- !is.na(fixtures$goal_diff)
-fixtures[index & fixtures$goal_diff > 0, c("win", "tie", "loss")] <- rep(c(1,0,0), rep(3, sum(index & fixtures$goal_diff > 0)))
-fixtures[index & fixtures$goal_diff == 0, c("win", "tie", "loss")] <-rep(c(0,1,0), rep(3, sum(index & fixtures$goal_diff == 0)))
-fixtures[index & fixtures$goal_diff < 0, c("win", "tie", "loss")] <- rep(c(0,0,1), rep(3, sum(index & fixtures$goal_diff < 0)))
+fixtures[index & fixtures$goal_diff > 0, c("win", "tie", "loss")] <- rep(c(1,0,0), rep(sum(index & fixtures$goal_diff > 0), 3))
+fixtures[index & fixtures$goal_diff == 0, c("win", "tie", "loss")] <-rep(c(0,1,0), rep(sum(index & fixtures$goal_diff == 0), 3))
+fixtures[index & fixtures$goal_diff < 0, c("win", "tie", "loss")] <- rep(c(0,0,1), rep(sum(index & fixtures$goal_diff < 0), 3))
 
 fixtures$team_score[is.na(fixtures$team_score)]<- 
   predict(glm.futbol, newdata = fixtures[is.na(fixtures$team_score),], type = "response")
@@ -160,8 +160,6 @@ for(i in 1:nrow(fixtures)) {
                                                         lambda_2 = fixtures$opponent_score[i])
   }
 }
-
-
 
 
 ######## Monte Carlo Simulations
@@ -300,6 +298,7 @@ for(k in 1:nsims) {
 }
 wc_sims$expected_pts <- round(wc_sims$expected_pts, 2)
 wc_sims[, 4:10] <- round(wc_sims[, 4:10], 4)
+wc_sims <- wc_sims[order(wc_sims$champ, decreasing = T),]
 write.csv(wc_sims, "wc_sims.csv", row.names = F)
 
 
@@ -316,7 +315,7 @@ goal_plot <- function(team1, team2, location, col1, col2) {
                                           "location" = location,
                                           stringsAsFactors = F)), 
                    type = "response")
- max_goals <- 10
+ max_goals <- 10000
  score_matrix <- dpois(0:max_goals, lambda1) %o% dpois(0:max_goals, lambda2)
  tie_prob <- sum(diag(score_matrix))
  win_prob <- sum(score_matrix[lower.tri(score_matrix)])
@@ -347,7 +346,6 @@ goal_plot <- function(team1, team2, location, col1, col2) {
  
 }
 
-goal_plot("France", "Australia", "N", "dodgerblue4", "yellow1")
-goal_plot("Argentina", "Iceland", "N", "lightskyblue", "dodgerblue")
-goal_plot("Denmark", "Peru", "N", "firebrick4", "white")
-goal_plot("Croatia", "Nigeria", "N", "red3", "chartreuse3")
+goal_plot("Sweden", "Korea Republic", "N", "gold1", "darkslateblue")
+goal_plot("Belgium", "Panama", "N", "black", "red2")
+goal_plot("Tunisia", "England", "N", "red2", "powderblue")
