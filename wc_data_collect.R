@@ -11,7 +11,6 @@ for(date in dates) {
   url <- paste0("http://www.espnfc.us/fifa-world-cup/4/scores?date=", date)
   x <- scan(url, sep = "\n",  what = "")
   x <- x[grep("gameId", x)]
-  nchar("\t\t\t\t<a  name=\"&lpos=scoreboard:")
   x <- suppressWarnings(as.numeric(substring(x, 32, 37)))
   x <- x[!is.na(x)]
   gameIDs <- unique(c(gameIDs, x))
