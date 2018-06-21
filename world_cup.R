@@ -382,13 +382,13 @@ goal_jgp <- function(team1, team2, location) {
     scale_y_continuous(waiver(), breaks = 0:5, labels = as.character(0:5))
 }
 
-goal_jgp("Portugal", "Morocco", "N")
-goal_jgp("Uruguay", "Saudi Arabia", "N")
-goal_jgp("Spain", "Iran", "N")
+goal_jgp("Argentina", "Croatia", "N")
+goal_jgp("Denmark", "Australia", "N")
+goal_jgp("France", "Peru", "N")
 
 
-goal_plot("Portugal", "Morocco", "N", "aquamarine1", "red4")
-goal_plot("Spain", "Iran", "N", "red2", "forestgreen")
-goal_plot("Uruguay", "Saudi Arabia", "N", "skyblue1", "forestgreen")
+goal_plot("Argentina", "Croatia", "N", "lightskyblue", "red2")
+goal_plot("Denmark", "Australia", "N", "red4", "springgreen4")
+goal_plot("France", "Peru", "N", "dodgerblue", "red3")
 
 

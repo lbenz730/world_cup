@@ -1,15 +1,15 @@
 team,opponent,location,group,team_score,opponent_score,goal_diff,date
 Uruguay,Egypt,N,A,1,0,1,6/15/18
 Uruguay,Russia,A,A,NA,NA,NA,6/25/18
-Uruguay,Saudi Arabia,N,A,NA,NA,NA,6/20/18
+Uruguay,Saudi Arabia,N,A,1,0,1,6/20/18
 Egypt,Russia,A,A,1,3,-2,6/19/18
 Egypt,Saudi Arabia,N,A,NA,NA,NA,6/25/18
 Russia,Saudi Arabia,H,A,5,0,5,6/14/18
 Spain,Portugal,N,B,3,3,0,6/15/18
-Spain,Iran,N,B,NA,NA,NA,6/20/18
+Spain,Iran,N,B,1,0,1,6/20/18
 Spain,Morocco,N,B,NA,NA,NA,6/25/18
 Portugal,Iran,N,B,NA,NA,NA,6/25/18
-Portugal,Morocco,N,B,NA,NA,NA,6/20/18
+Portugal,Morocco,N,B,1,0,1,6/20/18
 Iran,Morocco,N,B,1,0,1,6/15/18
 France,Peru,N,C,NA,NA,NA,6/21/18
 France,Australia,N,C,2,1,1,6/16/18
