@@ -11,24 +11,24 @@ Spain,Morocco,N,B,NA,NA,NA,6/25/18
 Portugal,Iran,N,B,NA,NA,NA,6/25/18
 Portugal,Morocco,N,B,1,0,1,6/20/18
 Iran,Morocco,N,B,1,0,1,6/15/18
-France,Peru,N,C,NA,NA,NA,6/21/18
+France,Peru,N,C,1,0,1,6/21/18
 France,Australia,N,C,2,1,1,6/16/18
 France,Denmark,N,C,NA,NA,NA,6/26/18
 Peru,Australia,N,C,NA,NA,NA,6/26/18
 Peru,Denmark,N,C,0,1,-1,6/16/18
-Australia,Denmark,N,C,NA,NA,NA,6/21/18
-Argentina,Croatia,N,D,NA,NA,NA,6/21/18
+Australia,Denmark,N,C,1,1,0,6/21/18
+Argentina,Croatia,N,D,0,3,-3,6/21/18
 Argentina,Iceland,N,D,1,1,0,6/16/18
 Argentina,Nigeria,N,D,NA,NA,NA,6/26/18
 Croatia,Iceland,N,D,NA,NA,NA,6/26/18
 Croatia,Nigeria,N,D,2,0,2,6/16/18
-Iceland,Nigeria,N,D,NA,NA,NA,6/22/18
-Brazil,Costa Rica,N,E,NA,NA,NA,6/22/18
+Iceland,Nigeria,N,D,0,2,-2,6/22/18
+Brazil,Costa Rica,N,E,2,0,2,6/22/18
 Brazil,Switzerland,N,E,1,1,0,6/17/18
 Brazil,Serbia,N,E,NA,NA,NA,6/27/18
 Costa Rica,Switzerland,N,E,NA,NA,NA,6/27/18
 Costa Rica,Serbia,N,E,0,1,-1,6/17/18
-Switzerland,Serbia,N,E,NA,NA,NA,6/22/18
+Switzerland,Serbia,N,E,2,1,1,6/22/18
 Germany,Korea Republic,N,F,NA,NA,NA,6/27/18
 Germany,Mexico,N,F,0,1,-1,6/17/18
 Germany,Sweden,N,F,NA,NA,NA,6/23/18

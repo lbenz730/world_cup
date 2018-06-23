@@ -348,10 +348,12 @@ goal_plot <- function(team1, team2, location, col1, col2) {
     labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
     scale_fill_manual(values=c(col1, col2)) +
     annotate("text", x = 3.4, y = 0.4, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
-    annotate("text", x = 3.4, y = 0.39, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.38, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
-    annotate("text", x = 3.4, y = 0.37, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.36, label = paste("Tie Probability", round(tie_prob, 2)))
+    annotate("text", x = 3.4, y = 0.37, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.34, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
+    annotate("text", x = 3.4, y = 0.31, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.28, label = paste("Tie Probability", round(tie_prob, 2))) + 
+    theme(plot.title = element_text(hjust = 0.5, size = 20),
+          axis.title = element_text(size = 14)) 
   
 }
 
@@ -366,10 +368,10 @@ goal_jgp <- function(team1, team2, location) {
                                                              "location" = location,
                                                              stringsAsFactors = F)), 
                      type = "response")
-  t1gprob <- dpois(0:5, lambda1)
-  t2gprob <- dpois(0:5, lambda2)
+  t1gprob <- dpois(0:4, lambda1)
+  t2gprob <- dpois(0:4, lambda2)
   df <- expand.grid(t1gprob, t2gprob)
-  df2 <- expand.grid(0:5, 0:5)
+  df2 <- expand.grid(0:4, 0:4)
   names(df) <- c("t1gprob", "t2gprob")
   names(df2) <- c("t1g", "t2g")
   df <- cbind(df, df2)
@@ -378,17 +380,15 @@ goal_jgp <- function(team1, team2, location) {
     scale_fill_gradient2(low = "navy", mid = "white", midpoint = 0.05,  high = "red") + 
     labs(x = paste(team1, "Goals"), y = paste(team2, "Goals"), fill = "Joint\nProbability",
          title = paste(team1, "vs.", team2, "Joint Goal Probability Distribution")) + 
-    scale_x_continuous(waiver(), breaks = 0:5, labels = as.character(0:5)) + 
-    scale_y_continuous(waiver(), breaks = 0:5, labels = as.character(0:5))
+    theme(plot.title = element_text(hjust = 0.5, size = 20),
+          axis.title = element_text(size = 14)) + 
+    scale_x_continuous(waiver(), breaks = 0:4, labels = as.character(0:4)) + 
+    scale_y_continuous(waiver(), breaks = 0:4, labels = as.character(0:4))
 }
 
-goal_jgp("Argentina", "Croatia", "N")
-goal_jgp("Denmark", "Australia", "N")
-goal_jgp("France", "Peru", "N")
-
-
-goal_plot("Argentina", "Croatia", "N", "lightskyblue", "red2")
-goal_plot("Denmark", "Australia", "N", "red4", "springgreen4")
-goal_plot("France", "Peru", "N", "dodgerblue", "red3")
-
-
+grid.arrange(goal_plot("Germany", "Sweden", "N", "black", "yellow1"),
+             goal_jgp("Germany", "Sweden", "N"))
+grid.arrange(goal_plot("Mexico", "Korea Republic", "N", "forestgreen", "slateblue"),
+             goal_jgp("Korea Republic", "Mexico", "N"))
+grid.arrange(goal_plot("Belgium", "Tunisia", "N", "red2", "red4"),
+             goal_jgp("Belgium", "Tunisia", "N"))
