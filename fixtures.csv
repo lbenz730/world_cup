@@ -31,13 +31,13 @@ Costa Rica,Serbia,N,E,0,1,-1,6/17/18
 Switzerland,Serbia,N,E,2,1,1,6/22/18
 Germany,Korea Republic,N,F,NA,NA,NA,6/27/18
 Germany,Mexico,N,F,0,1,-1,6/17/18
-Germany,Sweden,N,F,NA,NA,NA,6/23/18
-Korea Republic,Mexico,N,F,NA,NA,NA,6/23/18
+Germany,Sweden,N,F,2,1,1,6/23/18
+Korea Republic,Mexico,N,F,1,2,-1,6/23/18
 Korea Republic,Sweden,N,F,0,1,-1,6/18/18
 Mexico,Sweden,N,F,NA,NA,NA,6/27/18
 Belgium,England,N,G,NA,NA,NA,6/28/18
 Belgium,Panama,N,G,3,0,3,6/18/18
-Belgium,Tunisia,N,G,NA,NA,NA,6/23/18
+Belgium,Tunisia,N,G,5,2,3,6/23/18
 England,Panama,N,G,NA,NA,NA,6/24/18
 England,Tunisia,N,G,2,0,2,6/18/18
 Panama,Tunisia,N,G,NA,NA,NA,6/28/18

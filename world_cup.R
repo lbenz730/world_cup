@@ -6,6 +6,7 @@
 ### Load Packages
 library(dplyr)
 library(ggplot2)
+library(gridExtra)
 
 ### Data Cleaning
 x <- read.csv("international_soccer_game_data.csv", as.is = T)
@@ -198,7 +199,6 @@ sim_group <- function(group_name) {
   ladder <- data.frame("country" = unique(c(games$team, games$opponent)),
                        "pts" = rep(NA, 4),
                        "goals_forced" = rep(NA, 4),
-                       "goals_against" = rep(NA, 4),
                        "goal_diff" = rep(NA, 4),
                        stringsAsFactors = F)
   for(i in 1:4) {
@@ -208,11 +208,130 @@ sim_group <- function(group_name) {
       sum(games$opp_gd[games$opponent == ladder$country[i]])
     ladder$goals_forced[i] <- sum(games$team_goals[games$team == ladder$country[i]]) + 
       sum(games$opp_goals[games$opponent == ladder$country[i]])
-    ladder$goals_against[i] <- sum(games$opp_goals[games$team == ladder$country[i]]) + 
-      sum(games$team_goals[games$opponent == ladder$country[i]])
   }
+  
   ladder <- ladder[order(ladder$pts, ladder$goal_diff, 
-                         ladder$goals_forced, -1 * ladder$goals_against, decreasing = T),]
+                         ladder$goals_forced, decreasing = T),]
+  index <- paste(ladder$pts, ladder$goal_diff, ladder$goals_forced)
+  
+  ### Additional Tiebreakers
+  check <- T
+  check2 <- T
+  
+  ### 1-3 Tie
+  if(index[1] == index[3]) {
+    check <- F
+    check2 <- F
+    teams <- ladder$country[1:3]
+    subgames <- filter(games, team %in% teams, opponent %in% teams)
+    subladder <- data.frame("country" = teams,
+                            "pts" = rep(NA, length(teams)),
+                            "goals_forced" = rep(NA, length(teams)),
+                            "goal_diff" = rep(NA, length(teams)),
+                            stringsAsFactors = F)
+    for(i in 1:length(teams)) {
+      subladder$pts[i] <- sum(subgames$team_points[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_points[subgames$opponent == subladder$country[i]])
+      subladder$goal_diff[i] <- sum(subgames$team_gd[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_gd[subgames$opponent == subladder$country[i]])
+      subladder$goals_forced[i] <- sum(subgames$team_goals[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_goals[subgames$opponent == subladder$country[i]])
+    }
+    
+    subladder <- subladder[order(subladder$pts, subladder$goal_diff, 
+                                 subladder$goals_forced, decreasing = T),]
+    subindex <- paste(subladder$pts, subladder$goal_diff, subladder$goals_forced)
+    if(subindex[1] != subindex[3]) {
+      if(subindex[1] != subindex[2]) {
+        winner <- subladder$country[1]
+        second <- subladder$country[2]
+        loser <- subladder$country[3]
+        if(subindex[2] == index[3]) {
+          check <- T
+        }
+      }
+      else{
+        winner <- subladder$country[1]
+        second <- subladder$country[2]
+        loser <- subladder$country[3]
+        check2 <- T 
+      }
+    }
+    else{
+      winner <- sample(subladder$country, 1)
+      second <- sample(setdiff(teams, winner), 1)
+      loser <- setdiff(teams, c(winner, second))
+    }
+    
+    ladder <- ladder[c(grep(winner, ladder$country), 
+                       grep(second, ladder$country),
+                       grep(loser, ladder$country), 4),]
+  }
+  
+  ### 2 - 3 Tie
+  else if(index[2] == index[3] & check) {
+    teams <- ladder$country[2:3]
+    subgames <- filter(games, team %in% teams, opponent %in% teams)
+    subladder <- data.frame("country" = teams,
+                         "pts" = rep(NA, length(teams)),
+                         "goals_forced" = rep(NA, length(teams)),
+                         "goal_diff" = rep(NA, length(teams)),
+                         stringsAsFactors = F)
+    for(i in 1:length(teams)) {
+      subladder$pts[i] <- sum(subgames$team_points[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_points[subgames$opponent == subladder$country[i]])
+      subladder$goal_diff[i] <- sum(subgames$team_gd[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_gd[subgames$opponent == subladder$country[i]])
+      subladder$goals_forced[i] <- sum(subgames$team_goals[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_goals[subgames$opponent == subladder$country[i]])
+    }
+    
+    subladder <- subladder[order(subladder$pts, subladder$goal_diff, 
+                           subladder$goals_forced, decreasing = T),]
+    subindex <- paste(subladder$pts, subladder$goal_diff, subladder$goals_forced)
+    if(subindex[1] != subindex[2]) {
+      winner <- subladder$country[1]
+      loser <- subladder$country[2]
+    }
+    else{
+     winner <- sample(subladder$country, 1)
+     loser <- setdiff(teams, winner)
+    }
+    ladder <- ladder[c(1, grep(winner, ladder$country), grep(loser, ladder$country), 4),]
+  }
+  
+  ### 1 - 2 Tie
+  else if(index[1] == index[2] & check2) {
+    teams <- ladder$country[1:2]
+    subgames <- filter(games, team %in% teams, opponent %in% teams)
+    subladder <- data.frame("country" = teams,
+                            "pts" = rep(NA, length(teams)),
+                            "goals_forced" = rep(NA, length(teams)),
+                            "goal_diff" = rep(NA, length(teams)),
+                            stringsAsFactors = F)
+    for(i in 1:length(teams)) {
+      subladder$pts[i] <- sum(subgames$team_points[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_points[subgames$opponent == subladder$country[i]])
+      subladder$goal_diff[i] <- sum(subgames$team_gd[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_gd[subgames$opponent == subladder$country[i]])
+      subladder$goals_forced[i] <- sum(subgames$team_goals[subgames$team == subladder$country[i]]) + 
+        sum(subgames$opp_goals[subgames$opponent == subladder$country[i]])
+    }
+    
+    subladder <- subladder[order(subladder$pts, subladder$goal_diff, 
+                                 subladder$goals_forced, decreasing = T),]
+    subindex <- paste(subladder$pts, subladder$goal_diff, subladder$goals_forced)
+    if(subindex[1] != subindex[2]) {
+      winner <- subladder$country[1]
+      loser <- subladder$country[2]
+    }
+    else{
+      winner <- sample(subladder$country, 1)
+      loser <- setdiff(teams, winner)
+    }
+    ladder <- ladder[c(grep(winner, ladder$country), grep(loser, ladder$country), 3, 4),]
+  }
+  
   return(ladder)
 }
 
@@ -347,11 +466,11 @@ goal_plot <- function(team1, team2, location, col1, col2) {
     geom_bar(stat = "identity", position='dodge', colour  = "black") + 
     labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
     scale_fill_manual(values=c(col1, col2)) +
-    annotate("text", x = 3.4, y = 0.4, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
-    annotate("text", x = 3.4, y = 0.37, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.34, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
-    annotate("text", x = 3.4, y = 0.31, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.28, label = paste("Tie Probability", round(tie_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.43, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
+    annotate("text", x = 3.4, y = 0.4, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.37, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
+    annotate("text", x = 3.4, y = 0.34, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.31, label = paste("Tie Probability", round(tie_prob, 2))) + 
     theme(plot.title = element_text(hjust = 0.5, size = 20),
           axis.title = element_text(size = 14)) 
   
@@ -386,9 +505,9 @@ goal_jgp <- function(team1, team2, location) {
     scale_y_continuous(waiver(), breaks = 0:4, labels = as.character(0:4))
 }
 
-grid.arrange(goal_plot("Germany", "Sweden", "N", "black", "yellow1"),
-             goal_jgp("Germany", "Sweden", "N"))
-grid.arrange(goal_plot("Mexico", "Korea Republic", "N", "forestgreen", "slateblue"),
-             goal_jgp("Korea Republic", "Mexico", "N"))
-grid.arrange(goal_plot("Belgium", "Tunisia", "N", "red2", "red4"),
-             goal_jgp("Belgium", "Tunisia", "N"))
+grid.arrange(goal_plot("England", "Panama", "N", "darkslategray3", "red3"),
+             goal_jgp("England", "Panama", "N"))
+grid.arrange(goal_plot("Senegal", "Japan", "N", "springgreen4", "midnightblue"),
+             goal_jgp("Senegal", "Japan", "N"))
+grid.arrange(goal_plot("Colombia", "Poland", "N", "yellow1", "red3"),
+             goal_jgp("Colombia", "Poland", "N"))
