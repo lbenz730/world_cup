@@ -132,7 +132,7 @@ rankings <- data.frame("team" = sort(unique(y$team)),
                        "offense" = rep(NA, team_num),
                        "defense" = rep(NA, team_num))
 off_scale_factor <- mean(glm.futbol$coefficients[2:team_num])
-def_scale_factor <- mean(glm.futbol$coefficients[(team_num + 1):(2*team_num - 1)])
+def_scale_factor <- mean(glm.futbol$coefficients[(team_num + 1):(2*team_num - 1)], na.rm = T)
 rankings$offense <- c(0, glm.futbol$coefficients[2:team_num]) - off_scale_factor
 rankings$defense <- c(0, glm.futbol$coefficients[(team_num + 1):(2*team_num - 1)]) - def_scale_factor
 rankings$net_rating <- rankings$offense - rankings$defense
@@ -349,8 +349,19 @@ wc_sims <- data.frame("country" = unique(c(fixtures$team, fixtures$opponent)),
                       "champ" = rep(0, 32),
                       stringsAsFactors = F)
 groups <- c("A", "B", "C", "D", "E", "F", "G", "H")
-winners <- rep(NA, 8)
-runners_up <- rep(NA, 8)
+
+### Group Stage
+for(i in 1:4) {
+  sim_ladder <- sim_group(groups[i])
+  index <- apply(as.data.frame(sim_ladder$country), 1, grep, wc_sims$country)
+  wc_sims$expected_pts[index] <- wc_sims$expected_pts[index] + sim_ladder$pts
+  index_1 <- wc_sims$country == sim_ladder$country[1]
+  index_2 <- wc_sims$country == sim_ladder$country[2]
+  wc_sims$first_in_group[index_1] <- 1
+  wc_sims$second_in_group[index_2] <-1
+  wc_sims$r16[index_1 | index_2] <- 1
+}
+
 
 nsims <- 10000
 
@@ -358,8 +369,12 @@ for(k in 1:nsims) {
   if(k %% 100 == 0) {
     print(paste("Sim:", k))
   }
+  
+  winners <- c("Uruguay", "Spain", "France", "Croatia", rep(NA, 4))
+  runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", rep(NA, 4))
+  
   ### Group Stage
-  for(i in 1:8) {
+  for(i in 5:8) {
     sim_ladder <- sim_group(groups[i])
     index <- apply(as.data.frame(sim_ladder$country), 1, grep, wc_sims$country)
     wc_sims$expected_pts[index] <- wc_sims$expected_pts[index] + sim_ladder$pts/nsims
@@ -466,11 +481,11 @@ goal_plot <- function(team1, team2, location, col1, col2) {
     geom_bar(stat = "identity", position='dodge', colour  = "black") + 
     labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
     scale_fill_manual(values=c(col1, col2)) +
-    annotate("text", x = 3.4, y = 0.43, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
-    annotate("text", x = 3.4, y = 0.4, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.37, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
-    annotate("text", x = 3.4, y = 0.34, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.31, label = paste("Tie Probability", round(tie_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.53, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
+    annotate("text", x = 3.4, y = 0.5, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.47, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
+    annotate("text", x = 3.4, y = 0.44, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.41, label = paste("Tie Probability", round(tie_prob, 2))) + 
     theme(plot.title = element_text(hjust = 0.5, size = 20),
           axis.title = element_text(size = 14)) 
   
@@ -505,9 +520,11 @@ goal_jgp <- function(team1, team2, location) {
     scale_y_continuous(waiver(), breaks = 0:4, labels = as.character(0:4))
 }
 
-grid.arrange(goal_plot("England", "Panama", "N", "darkslategray3", "red3"),
-             goal_jgp("England", "Panama", "N"))
-grid.arrange(goal_plot("Senegal", "Japan", "N", "springgreen4", "midnightblue"),
-             goal_jgp("Senegal", "Japan", "N"))
-grid.arrange(goal_plot("Colombia", "Poland", "N", "yellow1", "red3"),
-             goal_jgp("Colombia", "Poland", "N"))
+grid.arrange(goal_plot("Germany", "Korea Republic", "N", "black", "slateblue4"),
+             goal_jgp("Germany", "Korea Republic", "N"))
+grid.arrange(goal_plot("Sweden", "Mexico", "N", "yellow1", "forestgreen"),
+             goal_jgp("Sweden", "Mexico", "N"))
+grid.arrange(goal_plot("Brazil", "Serbia", "N", "yellow1", "blue4"),
+             goal_jgp("Brazil", "Serbia", "N"))
+grid.arrange(goal_plot("Costa Rica", "Switzerland", "N", "dodgerblue4", "red3"),
+             goal_jgp("Costa Rica", "Switzerland", "N"))
