@@ -363,15 +363,15 @@ for(i in 1:4) {
 }
 
 
-nsims <- 10000
+nsims <- 1000
 
 for(k in 1:nsims) {
   if(k %% 100 == 0) {
     print(paste("Sim:", k))
   }
   
-  winners <- c("Uruguay", "Spain", "France", "Croatia", rep(NA, 4))
-  runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", rep(NA, 4))
+  winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", NA, NA)
+  runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Sweden", NA, NA)
   
   ### Group Stage
   for(i in 5:8) {
@@ -520,11 +520,11 @@ goal_jgp <- function(team1, team2, location) {
     scale_y_continuous(waiver(), breaks = 0:4, labels = as.character(0:4))
 }
 
-grid.arrange(goal_plot("Germany", "Korea Republic", "N", "black", "slateblue4"),
-             goal_jgp("Germany", "Korea Republic", "N"))
-grid.arrange(goal_plot("Sweden", "Mexico", "N", "yellow1", "forestgreen"),
-             goal_jgp("Sweden", "Mexico", "N"))
-grid.arrange(goal_plot("Brazil", "Serbia", "N", "yellow1", "blue4"),
-             goal_jgp("Brazil", "Serbia", "N"))
-grid.arrange(goal_plot("Costa Rica", "Switzerland", "N", "dodgerblue4", "red3"),
-             goal_jgp("Costa Rica", "Switzerland", "N"))
+grid.arrange(goal_plot("Japan", "Poland", "N", "midnightblue", "red3"),
+             goal_jgp("Japan", "Poland", "N"))
+grid.arrange(goal_plot("Colombia", "Senegal", "N", "yellow1", "springgreen4"),
+             goal_jgp("Colombia", "Senegal", "N"))
+grid.arrange(goal_plot("Belgium", "England", "N", "yellow1", "darkslategray3"),
+             goal_jgp("Belgium", "England", "N"))
+grid.arrange(goal_plot("Panama", "Tunisia", "N", "dodgerblue4", "red3"),
+             goal_jgp("Panama", "Tunisia", "N"))
