@@ -5,6 +5,7 @@
 * __fixtures.csv:__ Fixtures and results for matches played in the 2018 FIFA World Cup
 * __rankings.csv:__ International soccer rankings producted from model coefficients.
 * __wc_sims.csv:__ Up to date probabilities for each country to advance to each round of the World Cup.
+* __knockoutdisparty.R:__ Script for scraping historical data from Wikipedia to examine Knockout Round talent disparity between 2 halves of bracket for every tournament since 1998.
 
 Methodology can be found [here](http://rpubs.com/lbenz730/world_cup_model).
 
