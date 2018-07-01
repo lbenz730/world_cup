@@ -35,15 +35,17 @@ Germany,Sweden,N,F,2,1,1,6/23/18
 Korea Republic,Mexico,N,F,1,2,-1,6/23/18
 Korea Republic,Sweden,N,F,0,1,-1,6/18/18
 Mexico,Sweden,N,F,0,3,-3,6/27/18
-Belgium,England,N,G,NA,NA,NA,6/28/18
+Belgium,England,N,G,1,0,1,6/28/18
 Belgium,Panama,N,G,3,0,3,6/18/18
 Belgium,Tunisia,N,G,5,2,3,6/23/18
 England,Panama,N,G,6,1,5,6/24/18
 England,Tunisia,N,G,2,1,1,6/18/18
-Panama,Tunisia,N,G,NA,NA,NA,6/28/18
+Panama,Tunisia,N,G,1,2,-1,6/28/18
 Colombia,Japan,N,H,1,2,-1,6/19/18
 Colombia,Poland,N,H,3,0,3,6/24/18
-Colombia,Senegal,N,H,NA,NA,NA,6/28/18
-Poland,Japan,N,H,NA,NA,NA,6/28/18
+Colombia,Senegal,N,H,1,0,1,6/28/18
+Poland,Japan,N,H,1,0,1,6/28/18
 Poland,Senegal,N,H,1,2,-1,6/19/18
 Japan,Senegal,N,H,2,2,0,6/24/18
+France,Argentina,N,R16,4,3,1,6/30/18
+Uruguay,Portugal,N,R16,2,1,1,6/30/18

@@ -273,10 +273,10 @@ sim_group <- function(group_name) {
     teams <- ladder$country[2:3]
     subgames <- filter(games, team %in% teams, opponent %in% teams)
     subladder <- data.frame("country" = teams,
-                         "pts" = rep(NA, length(teams)),
-                         "goals_forced" = rep(NA, length(teams)),
-                         "goal_diff" = rep(NA, length(teams)),
-                         stringsAsFactors = F)
+                            "pts" = rep(NA, length(teams)),
+                            "goals_forced" = rep(NA, length(teams)),
+                            "goal_diff" = rep(NA, length(teams)),
+                            stringsAsFactors = F)
     for(i in 1:length(teams)) {
       subladder$pts[i] <- sum(subgames$team_points[subgames$team == subladder$country[i]]) + 
         sum(subgames$opp_points[subgames$opponent == subladder$country[i]])
@@ -287,15 +287,15 @@ sim_group <- function(group_name) {
     }
     
     subladder <- subladder[order(subladder$pts, subladder$goal_diff, 
-                           subladder$goals_forced, decreasing = T),]
+                                 subladder$goals_forced, decreasing = T),]
     subindex <- paste(subladder$pts, subladder$goal_diff, subladder$goals_forced)
     if(subindex[1] != subindex[2]) {
       winner <- subladder$country[1]
       loser <- subladder$country[2]
     }
     else{
-     winner <- sample(subladder$country, 1)
-     loser <- setdiff(teams, winner)
+      winner <- sample(subladder$country, 1)
+      loser <- setdiff(teams, winner)
     }
     ladder <- ladder[c(1, grep(winner, ladder$country), grep(loser, ladder$country), 4),]
   }
@@ -350,43 +350,44 @@ wc_sims <- data.frame("country" = unique(c(fixtures$team, fixtures$opponent)),
                       stringsAsFactors = F)
 groups <- c("A", "B", "C", "D", "E", "F", "G", "H")
 
+winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", "Belgium", "Colombia")
+runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Mexico", "England", "Japan")
+qtrs <- c("France", "Uruguay")
+
 ### Group Stage
-for(i in 1:4) {
+wc_sims$first_in_group[wc_sims$country %in% winners] <- 1
+wc_sims$second_in_group[wc_sims$country %in% runners_up] <- 1
+wc_sims$r16 <- wc_sims$first_in_group + wc_sims$second_in_group
+for(i in 1:8) {
   sim_ladder <- sim_group(groups[i])
   index <- apply(as.data.frame(sim_ladder$country), 1, grep, wc_sims$country)
   wc_sims$expected_pts[index] <- wc_sims$expected_pts[index] + sim_ladder$pts
-  index_1 <- wc_sims$country == sim_ladder$country[1]
-  index_2 <- wc_sims$country == sim_ladder$country[2]
-  wc_sims$first_in_group[index_1] <- 1
-  wc_sims$second_in_group[index_2] <-1
-  wc_sims$r16[index_1 | index_2] <- 1
 }
 
-
-nsims <- 1000
+nsims <- 10000
 
 for(k in 1:nsims) {
   if(k %% 100 == 0) {
     print(paste("Sim:", k))
   }
   
-  winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", NA, NA)
-  runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Sweden", NA, NA)
+  winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", "Belgium", "Colombia")
+  runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Mexico", "England", "Japan")
   
-  ### Group Stage
-  for(i in 5:8) {
-    sim_ladder <- sim_group(groups[i])
-    index <- apply(as.data.frame(sim_ladder$country), 1, grep, wc_sims$country)
-    wc_sims$expected_pts[index] <- wc_sims$expected_pts[index] + sim_ladder$pts/nsims
-    index_1 <- wc_sims$country == sim_ladder$country[1]
-    index_2 <- wc_sims$country == sim_ladder$country[2]
-    wc_sims$first_in_group[index_1] <- wc_sims$first_in_group[index_1] + 1/nsims
-    wc_sims$second_in_group[index_2] <- wc_sims$second_in_group[index_2] + 1/nsims
-    wc_sims$r16[index_1 | index_2] <- wc_sims$r16[index_1 | index_2]+ 1/nsims
-    winners[i] <- sim_ladder$country[1]
-    runners_up[i] <- sim_ladder$country[2]
-  }
-  
+  # ### Group Stage
+  # for(i in 5:8) {
+  #   sim_ladder <- sim_group(groups[i])
+  #   index <- apply(as.data.frame(sim_ladder$country), 1, grep, wc_sims$country)
+  #   wc_sims$expected_pts[index] <- wc_sims$expected_pts[index] + sim_ladder$pts/nsims
+  #   index_1 <- wc_sims$country == sim_ladder$country[1]
+  #   index_2 <- wc_sims$country == sim_ladder$country[2]
+  #   wc_sims$first_in_group[index_1] <- wc_sims$first_in_group[index_1] + 1/nsims
+  #   wc_sims$second_in_group[index_2] <- wc_sims$second_in_group[index_2] + 1/nsims
+  #   wc_sims$r16[index_1 | index_2] <- wc_sims$r16[index_1 | index_2]+ 1/nsims
+  #   winners[i] <- sim_ladder$country[1]
+  #   runners_up[i] <- sim_ladder$country[2]
+  # }
+  # 
   ### Knock-Out Stage
   teams_left <- 16
   ko_round <- 1
@@ -412,6 +413,16 @@ for(k in 1:nsims) {
     
     winners <- rep(NA, teams_left/2)
     for(i in 1:nrow(knockout)) {
+      if(teams_left == 16) {
+        if(knockout$team[i] %in% qtrs) {
+          knockout$winner[i] <- knockout$team[i]
+          next
+        }
+        else if(knockout$opponent[i] %in% qtrs) {
+          knockout$winner[i] <- knockout$opponent[i]
+          next
+        }
+      }
       team_goals <- rpois(1, knockout$team_goals[i])
       opp_goals <- rpois(1, knockout$opp_goals[i])
       if(team_goals > opp_goals) {
@@ -447,7 +458,7 @@ write.csv(wc_sims, "wc_sims.csv", row.names = F)
 
 
 ### Goal Plot Function
-goal_plot <- function(team1, team2, location, col1, col2) {
+goal_plot <- function(team1, team2, location, col1, col2, knockout = F) {
   lambda1 <- predict(glm.futbol, newdata = data.frame("team" = team1,
                                                       "opponent" = team2,
                                                       "location" = location,
@@ -461,8 +472,8 @@ goal_plot <- function(team1, team2, location, col1, col2) {
   max_goals <- 10
   score_matrix <- dpois(0:max_goals, lambda1) %o% dpois(0:max_goals, lambda2)
   tie_prob <- sum(diag(score_matrix))
-  win_prob <- sum(score_matrix[lower.tri(score_matrix)])
-  loss_prob <- sum(score_matrix[upper.tri(score_matrix)])
+  win_prob <- sum(score_matrix[lower.tri(score_matrix)]) + 1/2 * knockout * tie_prob
+  loss_prob <- sum(score_matrix[upper.tri(score_matrix)]) + 1/2 * knockout * tie_prob
   
   
   z <- data.frame("Team" = rep(c(team1, team2), rep(4,2)),
@@ -477,15 +488,17 @@ goal_plot <- function(team1, team2, location, col1, col2) {
     col1 <- col2
     col2 <- tmp
   }
+  
+  message <- ifelse(knockout, "Chance of Penalties:", "Tie Probability:")
   ggplot(z, aes(x = Goals, y = Probability, fill = Team)) + 
     geom_bar(stat = "identity", position='dodge', colour  = "black") + 
     labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
     scale_fill_manual(values=c(col1, col2)) +
     annotate("text", x = 3.4, y = 0.53, label = paste(team1, "Expected Goals:", round(lambda1, 2))) +
-    annotate("text", x = 3.4, y = 0.5, label = paste(team1, "Win Probability", round(win_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.5, label = paste(team1, "Win Probability:", round(win_prob, 2))) + 
     annotate("text", x = 3.4, y = 0.47, label = paste(team2, "Expected Goals:", round(lambda2, 2))) + 
-    annotate("text", x = 3.4, y = 0.44, label = paste(team2, "Win Probability", round(loss_prob, 2))) + 
-    annotate("text", x = 3.4, y = 0.41, label = paste("Tie Probability", round(tie_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.44, label = paste(team2, "Win Probability:", round(loss_prob, 2))) + 
+    annotate("text", x = 3.4, y = 0.41, label = paste(message, round(tie_prob, 2))) + 
     theme(plot.title = element_text(hjust = 0.5, size = 20),
           axis.title = element_text(size = 14)) 
   
@@ -520,11 +533,9 @@ goal_jgp <- function(team1, team2, location) {
     scale_y_continuous(waiver(), breaks = 0:4, labels = as.character(0:4))
 }
 
-grid.arrange(goal_plot("Japan", "Poland", "N", "midnightblue", "red3"),
-             goal_jgp("Japan", "Poland", "N"))
-grid.arrange(goal_plot("Colombia", "Senegal", "N", "yellow1", "springgreen4"),
-             goal_jgp("Colombia", "Senegal", "N"))
-grid.arrange(goal_plot("Belgium", "England", "N", "yellow1", "darkslategray3"),
-             goal_jgp("Belgium", "England", "N"))
-grid.arrange(goal_plot("Panama", "Tunisia", "N", "dodgerblue4", "red3"),
-             goal_jgp("Panama", "Tunisia", "N"))
+grid.arrange(goal_plot("Russia", "Spain", "H", "blue2", "red3", T),
+             goal_jgp("Russia", "Spain", "H"))
+grid.arrange(goal_plot("Croatia", "Denmark", "N", "dodgerblue3", "red4", T),
+             goal_jgp("Croatia", "Denmark", "N"))
+
+
