@@ -352,7 +352,7 @@ groups <- c("A", "B", "C", "D", "E", "F", "G", "H")
 
 winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", "Belgium", "Colombia")
 runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Mexico", "England", "Japan")
-qtrs <- c("France", "Uruguay", "Russia", "Croatia")
+qtrs <- c("France", "Uruguay", "Russia", "Croatia", "Brazil", "Belgium")
 
 ### Group Stage
 wc_sims$first_in_group[wc_sims$country %in% winners] <- 1
@@ -489,8 +489,8 @@ goal_plot <- function(team1, team2, location, col1, col2, knockout = F) {
     col2 <- tmp
   }
   
-  message <- ifelse(knockout, "Chance of Penalties:", "Tie Probability:")
-  ggplot(z, aes(x = Goals, y = Probability, fill = Team)) + 
+  message <- ifelse(knockout, "Chance of Extra Time:", "Tie Probability:")
+  p <- ggplot(z, aes(x = Goals, y = Probability, fill = Team)) + 
     geom_bar(stat = "identity", position='dodge', colour  = "black") + 
     labs(title = paste(team1, "vs.", team2, "Goal Distributions")) + 
     scale_fill_manual(values=c(col1, col2)) +
@@ -501,6 +501,14 @@ goal_plot <- function(team1, team2, location, col1, col2, knockout = F) {
     annotate("text", x = 3.4, y = 0.41, label = paste(message, round(tie_prob, 2))) + 
     theme(plot.title = element_text(hjust = 0.5, size = 20),
           axis.title = element_text(size = 14)) 
+  if(knockout) {
+    lambda1 <- lambda1/3
+    lambda2 <- lambda2/3
+    score_matrix <- dpois(0:max_goals, lambda1) %o% dpois(0:max_goals, lambda2)
+    tie_prob <- sum(diag(score_matrix)) * tie_prob
+    p <- p + annotate("text", x = 3.4, y = 0.38, label = paste("Chance of Penalties", 
+                                                               round(tie_prob, 2)))
+  }
   
 }
 
@@ -522,7 +530,7 @@ goal_jgp <- function(team1, team2, location) {
   names(df) <- c("t1gprob", "t2gprob")
   names(df2) <- c("t1g", "t2g")
   df <- cbind(df, df2)
-  ggplot(df, aes(x = t1g, y = t2g, fill = t1gprob * t2gprob)) + 
+  p <- ggplot(df, aes(x = t1g, y = t2g, fill = t1gprob * t2gprob)) + 
     geom_raster(alpha  = 0.9) + 
     scale_fill_gradient2(low = "navy", mid = "white", midpoint = 0.05,  high = "red") + 
     labs(x = paste(team1, "Goals"), y = paste(team2, "Goals"), fill = "Joint\nProbability",
@@ -531,11 +539,12 @@ goal_jgp <- function(team1, team2, location) {
           axis.title = element_text(size = 14)) + 
     scale_x_continuous(waiver(), breaks = 0:4, labels = as.character(0:4)) + 
     scale_y_continuous(waiver(), breaks = 0:4, labels = as.character(0:4))
+  return(p)
 }
 
-grid.arrange(goal_plot("Russia", "Spain", "H", "blue2", "red3", T),
-             goal_jgp("Russia", "Spain", "H"))
-grid.arrange(goal_plot("Croatia", "Denmark", "N", "dodgerblue3", "red4", T),
-             goal_jgp("Croatia", "Denmark", "N"))
+grid.arrange(goal_plot("Colombia", "England", "N", "yellow1", "darkslategray3", T),
+             goal_jgp("Colombia", "England", "N"))
+grid.arrange(goal_plot("Sweden", "Switzerland", "N", "blue2", "red3", T),
+             goal_jgp("Sweden", "Switzerland", "N"))
 
 
