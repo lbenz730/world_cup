@@ -353,7 +353,7 @@ groups <- c("A", "B", "C", "D", "E", "F", "G", "H")
 winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", "Belgium", "Colombia")
 runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Mexico", "England", "Japan")
 qtrs <- c("France", "Uruguay", "Russia", "Croatia", "Brazil", "Belgium", "Sweden", "England")
-semis <- c("France", "Belgium")
+semis <- c("France", "Belgium", "England", "Croatia")
 
 ### Group Stage
 wc_sims$first_in_group[wc_sims$country %in% winners] <- 1
