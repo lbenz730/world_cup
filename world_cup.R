@@ -353,6 +353,7 @@ groups <- c("A", "B", "C", "D", "E", "F", "G", "H")
 winners <- c("Uruguay", "Spain", "France", "Croatia", "Brazil", "Sweden", "Belgium", "Colombia")
 runners_up <- c("Russia", "Portugal", "Denmark", "Argentina", "Switzerland", "Mexico", "England", "Japan")
 qtrs <- c("France", "Uruguay", "Russia", "Croatia", "Brazil", "Belgium", "Sweden", "England")
+semis <- c("France", "Belgium")
 
 ### Group Stage
 wc_sims$first_in_group[wc_sims$country %in% winners] <- 1
@@ -419,6 +420,16 @@ for(k in 1:nsims) {
           next
         }
         else if(knockout$opponent[i] %in% qtrs) {
+          knockout$winner[i] <- knockout$opponent[i]
+          next
+        }
+      }
+      if(teams_left == 8) {
+        if(knockout$team[i] %in% semis) {
+          knockout$winner[i] <- knockout$team[i]
+          next
+        }
+        else if(knockout$opponent[i] %in% semis) {
           knockout$winner[i] <- knockout$opponent[i]
           next
         }
@@ -542,9 +553,9 @@ goal_jgp <- function(team1, team2, location) {
   return(p)
 }
 
-grid.arrange(goal_plot("Colombia", "England", "N", "yellow1", "darkslategray3", T),
-             goal_jgp("Colombia", "England", "N"))
-grid.arrange(goal_plot("Sweden", "Switzerland", "N", "blue2", "red3", T),
-             goal_jgp("Sweden", "Switzerland", "N"))
+grid.arrange(goal_plot("Russia", "Croatia", "H", "red3", "dodgerblue4", T),
+             goal_jgp("Russia", "Croatia", "H"))
+grid.arrange(goal_plot("Sweden", "England", "N", "yellow1", "red3", T),
+             goal_jgp("Sweden", "England", "N"))
 
 
